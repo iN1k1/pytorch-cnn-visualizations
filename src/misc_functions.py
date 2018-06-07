@@ -72,7 +72,7 @@ def save_class_activation_on_image(org_img, activation_map, file_name):
     cv2.imwrite(path_to_file, np.uint8(255 * img_with_heatmap))
 
 
-def preprocess_image(cv2im, resize_im=True):
+def preprocess_image(cv2im, resize_im=True, cudify=False, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
     """
         Processes image for CNNs
 
@@ -83,8 +83,9 @@ def preprocess_image(cv2im, resize_im=True):
         im_as_var (Pytorch variable): Variable that contains processed float tensor
     """
     # mean and std list for channels (Imagenet)
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
+    #mean = [0.485, 0.456, 0.406]
+    #std = [0.229, 0.224, 0.225]
+
     # Resize image
     if resize_im:
         cv2im = cv2.resize(cv2im, (224, 224))
@@ -94,18 +95,23 @@ def preprocess_image(cv2im, resize_im=True):
     # Normalize the channels
     for channel, _ in enumerate(im_as_arr):
         im_as_arr[channel] /= 255
-        im_as_arr[channel] -= mean[channel]
-        im_as_arr[channel] /= std[channel]
+        if mean != []:
+            im_as_arr[channel] -= mean[channel]
+        if std != []:
+            im_as_arr[channel] /= std[channel]
     # Convert to float tensor
     im_as_ten = torch.from_numpy(im_as_arr).float()
     # Add one more channel to the beginning. Tensor shape = 1,3,224,224
     im_as_ten.unsqueeze_(0)
     # Convert to Pytorch variable
-    im_as_var = Variable(im_as_ten, requires_grad=True)
-    return im_as_var
+    if cudify:
+        im_as_ten = im_as_ten.to("cuda")
+    im_as_ten.requires_grad = True
+    #im_as_var = Variable(im_as_ten, requires_grad=True)
+    return im_as_ten
 
 
-def recreate_image(im_as_var):
+def recreate_image(im_as_var, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
     """
         Recreates images from a torch variable, sort of reverse preprocessing
 
@@ -115,10 +121,10 @@ def recreate_image(im_as_var):
     returns:
         recreated_im (numpy arr): Recreated image in array
     """
-    reverse_mean = [-0.485, -0.456, -0.406]
-    reverse_std = [1/0.229, 1/0.224, 1/0.225]
+    reverse_mean = [-m for m in mean]#[-0.485, -0.456, -0.406]
+    reverse_std = [1/v for v in std] #[1/0.229, 1/0.224, 1/0.225]
     recreated_im = copy.copy(im_as_var.data.numpy()[0])
-    for c in range(3):
+    for c in range(recreated_im.shape[0]):
         recreated_im[c] /= reverse_std[c]
         recreated_im[c] -= reverse_mean[c]
     recreated_im[recreated_im > 1] = 1

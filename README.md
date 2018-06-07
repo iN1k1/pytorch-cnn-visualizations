@@ -168,7 +168,7 @@ Deep dream is technically the same operation as layer visualization the only dif
 
 
 ## Class Specific Image Generation
-This operation produces different outputs based on the model and the applied regularization method. Below, are some samples produced with VGG19 incorporated with Gaussian blur every other iteration. Note that these images are generated with regular CNNs with optimizing the input (rather than the model weights) and not with GANs.
+This operation produces different outputs based on the model and the applied regularization method. Below, are some samples produced with L2 regularization from VGG19. Note that these images are generated with regular CNNs with optimizing the input (rather than the model weights) and not with GANs.
 
 <table border=0 width="50px" >
 	<tbody>
@@ -220,7 +220,7 @@ This operation is quite similar to generating class specific images, we start wi
 </table>
 
 
-## Disguised Fooling (Adversarial) Image Generation
+## Disguised Fooling Image Generation
 For this operation we start with an image and perform gradient updates on the image for a specific class but with smaller learning rates so that the original image does not change too much. As it can be seen from samples, on some images it is almost impossible to recognize the difference between two images but on others it can clearly be observed that something is wrong. All of the examples below were created from and tested on AlexNet to fool it.
 
 

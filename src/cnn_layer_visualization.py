@@ -31,6 +31,8 @@ class CNNLayerVisualization():
         # Generate a random image
         self.created_image = np.uint8(np.random.uniform(150, 180, im_size))
         self.use_gpu = use_gpu
+        if use_gpu:
+            self.model.to("cuda")
         self.network_mean = network_mean
         self.network_std = network_std
         # Create the folder to export images if not exists
@@ -107,14 +109,14 @@ class CNNLayerVisualization():
             self.conv_output = x[0, self.selected_filter]
             # Loss function is the mean of the output of the selected layer/filter
             # We try to minimize the mean of the output of that specific filter
-            loss = torch.mean(self.conv_output.cpu())
-            print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.data.numpy()[0]))
+            loss = torch.mean(self.conv_output.to("cpu"))
+            print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.item()))
             # Backward
             loss.backward()
             # Update image
             optimizer.step()
             # Recreate image
-            self.created_image = recreate_image(self.processed_image.cpu(), mean=self.network_mean, std=self.network_std)
+            self.created_image = recreate_image(self.processed_image.to("cpu"), mean=self.network_mean, std=self.network_std)
             # Save image
             if i % save_iter == 0:
                 Image.fromarray(self.created_image).save(os.path.join(self.save_path, 'layer_vis_l' + str(self.selected_layer) +
