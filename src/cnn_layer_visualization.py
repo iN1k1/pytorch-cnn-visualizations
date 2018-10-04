@@ -8,7 +8,7 @@ from PIL import Image
 import numpy as np
 
 import torch
-from torch.optim import Adam
+from torch.optim import SGD, Adam
 from torchvision import models
 
 from .misc_functions import preprocess_image, recreate_image
@@ -54,8 +54,9 @@ class CNNLayerVisualization():
         # Process image and return variable
         self.processed_image = preprocess_image(self.created_image, cudify=self.use_gpu, mean=self.network_mean, std=self.network_std)
         # Define optimizer for the image
-        optimizer = Adam([self.processed_image], lr=0.1, weight_decay=1e-6)
-        for i in range(1, 31):
+        # Earlier layers need higher learning rates to visualize whereas later layers need less
+        optimizer = SGD([self.processed_image], lr=5, weight_decay=1e-6)
+        for i in range(1, 51):
             optimizer.zero_grad()
             # Assign create image to a variable to move forward in the model
             x = self.processed_image
@@ -70,8 +71,8 @@ class CNNLayerVisualization():
                     break
             # Loss function is the mean of the output of the selected layer/filter
             # We try to minimize the mean of the output of that specific filter
-            loss = -torch.mean(self.conv_output)
-            print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.data.numpy()))
+            loss = torch.mean(self.conv_output)
+            print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.data.numpy()[0]))
             # Backward
             loss.backward()
             # Update image
@@ -83,12 +84,12 @@ class CNNLayerVisualization():
                 Image.fromarray(self.created_image).save( os.path.join(self.save_path, 'layer_vis_l' + str(self.selected_layer) +
                                  '_f' + str(self.selected_filter) + '_iter' + str(i) + '.jpg'))
 
-    def visualise_layer_without_hooks(self, save_iter=5, num_iter=50):
+    def visualise_layer_without_hooks(self, save_iter=5, num_iter=50, lr=5):
         # Process image and return variable
         self.processed_image = preprocess_image(self.created_image, resize_im=False, cudify=self.use_gpu, mean=self.network_mean, std=self.network_std)
         # Define optimizer for the image
         # Earlier layers need higher learning rates to visualize whereas later layers need less
-        optimizer = SGD([self.processed_image], lr=5, weight_decay=1e-6)
+        optimizer = Adam([self.processed_image], lr=lr, weight_decay=1e-6)
         for i in range(1, num_iter+1):
             optimizer.zero_grad()
             # Assign create image to a variable to move forward in the model
@@ -108,7 +109,7 @@ class CNNLayerVisualization():
             self.conv_output = x[0, self.selected_filter]
             # Loss function is the mean of the output of the selected layer/filter
             # We try to minimize the mean of the output of that specific filter
-            loss = torch.mean(self.conv_output.to("cpu"))
+            loss = -torch.mean(self.conv_output.to("cpu"))
             print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.item()))
             # Backward
             loss.backward()
@@ -130,7 +131,7 @@ if __name__ == '__main__':
     layer_vis = CNNLayerVisualization(pretrained_model, cnn_layer, filter_pos)
 
     # Layer visualization with pytorch hooks
-    layer_vis.visualise_layer_with_hooks()
+    # layer_vis.visualise_layer_with_hooks()
 
     # Layer visualization without pytorch hooks
-    # layer_vis.visualise_layer_without_hooks()
+    layer_vis.visualise_layer_without_hooks()

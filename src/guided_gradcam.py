@@ -5,11 +5,11 @@ Created on Thu Oct 23 11:27:15 2017
 """
 import numpy as np
 
-from misc_functions import (get_params,
+from .misc_functions import (get_params,
                             convert_to_grayscale,
                             save_gradient_images)
-from gradcam import GradCam
-from guided_backprop import GuidedBackprop
+from .gradcam import GradCam
+from .guided_backprop import GuidedBackprop
 
 
 def guided_grad_cam(grad_cam_mask, guided_backprop_mask):
@@ -32,15 +32,15 @@ if __name__ == '__main__':
         get_params(target_example)
 
     # Grad cam
-    gcv2 = GradCam(pretrained_model, target_layer=11)
+    gcv2 = GradCam(pretrained_model, target_layer=35)
     # Generate cam mask
     cam = gcv2.generate_cam(prep_img, target_class)
     print('Grad cam completed')
 
     # Guided backprop
-    GBP = GuidedBackprop(pretrained_model)
+    GBP = GuidedBackprop(pretrained_model, prep_img, target_class)
     # Get gradients
-    guided_grads = GBP.generate_gradients(prep_img, target_class)
+    guided_grads = GBP.generate_gradients()
     print('Guided backpropagation completed')
 
     # Guided Grad cam
