@@ -39,6 +39,8 @@ def save_gradient_images(gradient, file_name):
         gradient (np arr): Numpy array of the gradient with shape (3, 224, 224)
         file_name (str): File name to be exported
     """
+    if not os.path.exists('../results'):
+        os.makedirs('../results')
     gradient = gradient - gradient.min()
     gradient /= gradient.max()
     gradient = np.uint8(gradient * 255).transpose(1, 2, 0)
@@ -57,6 +59,8 @@ def save_class_activation_on_image(org_img, activation_map, file_name):
         activation_map (numpy arr): activation map (grayscale) 0-255
         file_name (str): File name of the exported image
     """
+    if not os.path.exists('../results'):
+        os.makedirs('../results')
     # Grayscale activation map
     path_to_file = os.path.join('../results', file_name+'_Cam_Grayscale.jpg')
     cv2.imwrite(path_to_file, activation_map)
@@ -168,10 +172,7 @@ def get_params(example_index):
     # Pick one of the examples
     example_list = [['../input_images/snake.jpg', 56],
                     ['../input_images/cat_dog.png', 243],
-                    ['../input_images/spider.png', 72],
-                    ['../input_images/apple.JPEG', 948],
-                    ['../input_images/eel.JPEG', 390],
-                    ['../input_images/bird.JPEG', 13]]
+                    ['../input_images/spider.png', 72]]
     selected_example = example_index
     img_path = example_list[selected_example][0]
     target_class = example_list[selected_example][1]
@@ -181,7 +182,7 @@ def get_params(example_index):
     # Process image
     prep_img = preprocess_image(original_image)
     # Define model
-    pretrained_model = models.vgg19(pretrained=True)
+    pretrained_model = models.alexnet(pretrained=True)
     return (original_image,
             prep_img,
             target_class,
