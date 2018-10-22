@@ -71,8 +71,11 @@ class CNNLayerVisualization():
                     break
             # Loss function is the mean of the output of the selected layer/filter
             # We try to minimize the mean of the output of that specific filter
-            loss = torch.mean(self.conv_output)
-            print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.data.numpy()[0]))
+            loss = -torch.mean(self.conv_output)
+            # Limit verbosity level..
+            if i % 10 == 0:
+                print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.item()))
+
             # Backward
             loss.backward()
             # Update image
@@ -110,7 +113,10 @@ class CNNLayerVisualization():
             # Loss function is the mean of the output of the selected layer/filter
             # We try to minimize the mean of the output of that specific filter
             loss = -torch.mean(self.conv_output.to("cpu"))
-            print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.item()))
+
+            # Limit verbosity level..
+            if i % 10 == 0:
+                print('Iteration:', str(i), 'Loss:', "{0:.2f}".format(loss.item()))
             # Backward
             loss.backward()
             # Update image
